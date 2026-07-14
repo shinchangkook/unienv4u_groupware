@@ -1,19 +1,45 @@
+import { useEffect, useState } from 'react'
 import { api } from '../mock/api'
 import { useAuth } from '../auth/AuthContext'
-import { useApi, PageHeader, Card, statusBadge, Loading } from '../components/ui'
+import { PageHeader, Card, statusBadge, Loading } from '../components/ui'
+import Modal from '../components/Modal'
+import { useToast } from '../components/Toast'
 import { calcAnnualLeave } from '../lib/permissions'
+import type { Leave as LeaveT, AnnualSummary } from '../types'
 
 export default function Leave() {
   const { user } = useAuth()
-  const { data: leaves } = useApi(() => api.listLeaves())
-  const { data: summary } = useApi(() => api.annualSummary(user?.empno || '', 2026), [user?.empno])
-  if (!leaves || !summary) return <Loading />
+  const toast = useToast()
+  const [leaves, setLeaves] = useState<LeaveT[] | null>(null)
+  const [summary, setSummary] = useState<AnnualSummary | null>(null)
+  const [open, setOpen] = useState(false)
+  const [form, setForm] = useState({ type: '연차', period: '', days: 1, reason: '' })
 
+  useEffect(() => {
+    api.listLeaves().then(setLeaves)
+    api.annualSummary(user?.empno || '', 2026).then(setSummary)
+  }, [user?.empno])
+
+  if (!leaves || !summary) return <Loading />
   const myTotal = user ? calcAnnualLeave(user.date, 2026) : 15
+
+  function submit() {
+    if (!form.period) { toast('기간을 입력해주세요.', 'warning'); return }
+    const nl: LeaveT = {
+      id: 'L-' + Date.now(), empno: user!.empno, name: user!.name, dept: user!.dept,
+      type: form.type as LeaveT['type'], period: form.period, days: Number(form.days),
+      reason: form.reason || '개인', approver: '팀장', status: '검토중',
+    }
+    setLeaves((s) => [nl, ...(s || [])])
+    setOpen(false)
+    setForm({ type: '연차', period: '', days: 1, reason: '' })
+    toast('휴가 신청이 접수되었습니다. 결재 대기 중입니다.', 'success')
+  }
 
   return (
     <>
-      <PageHeader title="휴가관리" desc="휴가 신청·결재 및 연차 자동 계산 (근로기준법)" action={<button className="btn pri"><i className="ti ti-plus" /> 휴가 신청</button>} />
+      <PageHeader title="휴가관리" desc="휴가 신청·결재 및 연차 자동 계산 (근로기준법)"
+        action={<button className="btn pri" onClick={() => setOpen(true)}><i className="ti ti-plus" /> 휴가 신청</button>} />
 
       <div className="stat-grid section">
         <div className="stat">
@@ -56,6 +82,27 @@ export default function Leave() {
           1년 미만 <b>11일</b> · 1~3년 <b>15일</b> · 3~5년 <b>16일</b> · 5~10년 <b>17일</b> · 10~20년 <b>21일</b> · 20년 이상 <b>25일</b>
         </div>
       </Card>
+
+      <Modal open={open} title="휴가 신청" onClose={() => setOpen(false)}
+        footer={<><button className="btn" onClick={() => setOpen(false)}>취소</button><button className="btn pri" onClick={submit}>신청</button></>}>
+        <label className="fld"><span>휴가 유형</span>
+          <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} style={selStyle}>
+            <option>연차</option><option>월차</option><option>반차</option><option>병가</option>
+          </select>
+        </label>
+        <label className="fld"><span>기간 (예: 2026-08-01~2026-08-02)</span>
+          <input value={form.period} onChange={(e) => setForm({ ...form, period: e.target.value })} style={inStyle} placeholder="2026-08-01" />
+        </label>
+        <label className="fld"><span>일수</span>
+          <input type="number" step="0.5" value={form.days} onChange={(e) => setForm({ ...form, days: Number(e.target.value) })} style={inStyle} />
+        </label>
+        <label className="fld"><span>사유</span>
+          <input value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} style={inStyle} placeholder="개인 사유" />
+        </label>
+      </Modal>
     </>
   )
 }
+
+const inStyle: React.CSSProperties = { width: '100%', padding: '9px 11px', border: '0.5px solid var(--border-p)', borderRadius: 8, fontSize: 13, background: 'var(--bg-primary)', color: 'var(--text-primary)' }
+const selStyle = inStyle
