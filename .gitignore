@@ -1,0 +1,18 @@
+# OS 파일
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 에디터
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 임시 파일
+*.tmp
+*.bak
+*.log
+
+# 개인정보 포함 가능 파일
+*.env
