@@ -1,0 +1,40 @@
+# unienv4u 그룹웨어 — Nginx HTTPS 리버스 프록시 예시
+# 앞단에서 TLS 종료 후 내부 Node 서버(4000)로 전달한다.
+# 사용: 이 파일을 /etc/nginx/conf.d/groupware.conf 로 복사·수정 후 `nginx -t && systemctl reload nginx`.
+
+# HTTP → HTTPS 리다이렉트
+server {
+    listen 80;
+    server_name groupware.example.com;          # ← 실제 도메인으로 교체
+    location / { return 301 https://$host$request_uri; }
+}
+
+server {
+    listen 443 ssl http2;
+    server_name groupware.example.com;          # ← 실제 도메인으로 교체
+
+    # 인증서 (Let's Encrypt / certbot 권장)
+    ssl_certificate     /etc/letsencrypt/live/groupware.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/groupware.example.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # 보안 헤더
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # 업로드 용량(첨부파일: base64 팽창 고려)
+    client_max_body_size 20m;
+
+    location / {
+        proxy_pass http://127.0.0.1:4000;
+        proxy_http_version 1.1;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+}

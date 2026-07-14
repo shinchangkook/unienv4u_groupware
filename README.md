@@ -7,10 +7,22 @@
 
 ## 🚀 바로 실행
 
+### 방법 1) 데모 모드 (서버 없이)
 ```
 index.html 파일을 브라우저에서 열면 바로 실행됩니다.
-별도 서버 설치 불필요 — 단일 HTML 파일로 동작합니다.
+데이터는 브라우저 localStorage 에 저장됩니다(체험용).
 ```
+
+### 방법 2) 서버 연동 모드 (실제 인증 + DB) — Phase 0~1
+```bash
+cd server
+npm install
+cp .env.example .env      # 최초 1회 (JWT_SECRET 무작위 값으로 변경 권장)
+npm start                 # http://localhost:4000 접속
+```
+Node + Express + SQLite 백엔드로 **서버 인증(JWT + 비밀번호 해시)** 과 회원가입·승인·
+로그인을 처리합니다. 자세한 내용은 [`server/README.md`](server/README.md) 와
+구축 가이드 [`uni_build_20260714.md`](uni_build_20260714.md) 를 참고하세요.
 
 ### 데모 계정
 
