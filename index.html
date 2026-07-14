@@ -328,7 +328,13 @@ td.neg{text-align:right!important;font-weight:600;color:var(--text-danger)}
         <img id="topbar-logo" src="" alt="유앤아이환경기술" style="height:18px;width:auto">
         <span style="font-size:10px;color:var(--text-secondary);white-space:nowrap">www.unienv4u.com</span>
       </a>
-      <button class="btn"><i class="ti ti-bell" aria-hidden="true"></i></button>
+      <div style="position:relative;display:inline-block">
+        <button class="btn" id="notif-bell" onclick="toggleNotif(event)"><i class="ti ti-bell" aria-hidden="true"></i><span id="notif-badge" style="display:none;position:absolute;top:-5px;right:-5px;background:#e24b4a;color:#fff;font-size:9px;border-radius:10px;padding:0 4px;min-width:14px;text-align:center;line-height:14px">0</span></button>
+        <div id="notif-dropdown" style="display:none;position:absolute;right:0;top:calc(100% + 4px);width:280px;max-height:360px;overflow-y:auto;background:var(--bg-primary);border:0.5px solid var(--border-s);border-radius:var(--radius-md);box-shadow:0 4px 16px rgba(0,0,0,.15);z-index:1000">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:0.5px solid var(--border-t)"><span style="font-size:11px;font-weight:600">알림</span><button class="btn sm" onclick="markAllNotif()">모두 읽음</button></div>
+          <div id="notif-list"></div>
+        </div>
+      </div>
       <button class="btn"><i class="ti ti-printer" aria-hidden="true"></i></button>
       <button class="btn"><i class="ti ti-download" aria-hidden="true"></i> 내보내기</button>
     </div>
@@ -496,10 +502,10 @@ td.neg{text-align:right!important;font-weight:600;color:var(--text-danger)}
       <div class="tab" onclick="stab('ap','all',this)">전체 문서</div>
     </div>
     <div id="ap-wait" class="tp on">
-      <div class="sbar"><button class="btn pri" onclick="openMo('mo-appr-new')"><i class="ti ti-plus" aria-hidden="true"></i> 문서 기안</button></div>
+      <div class="sbar"><button class="btn pri" onclick="openNewAppr()"><i class="ti ti-plus" aria-hidden="true"></i> 문서 기안</button></div>
       <div class="card" style="padding:0"><div class="tw"><table>
         <thead><tr><th>문서번호</th><th>문서명</th><th>기안자</th><th>기안일</th><th>상태</th><th>처리</th></tr></thead>
-        <tbody>
+        <tbody id="appr-wait-tbody">
           <tr><td>APP-2026-018</td><td>6월 출장비 정산 신청</td><td>홍길동</td><td>2026-06-17</td><td><span class="bx ba">검토중</span></td><td><button class="btn sm" onclick="openMo('mo-appr-v')">결재</button></td></tr>
           <tr><td>APP-2026-017</td><td>수질측정 장비 구매 품의</td><td>이분석</td><td>2026-06-16</td><td><span class="bx ba">검토중</span></td><td><button class="btn sm" onclick="openMo('mo-appr-v')">결재</button></td></tr>
         </tbody>
@@ -508,7 +514,7 @@ td.neg{text-align:right!important;font-weight:600;color:var(--text-danger)}
     <div id="ap-mine" class="tp">
       <div class="card" style="padding:0"><div class="tw"><table>
         <thead><tr><th>문서번호</th><th>문서명</th><th>기안일</th><th>상태</th></tr></thead>
-        <tbody>
+        <tbody id="appr-mine-tbody">
           <tr><td>APP-2026-016</td><td>차량 정기점검 비용 청구</td><td>2026-06-13</td><td><span class="bx bg">승인완료</span></td></tr>
           <tr><td>APP-2026-014</td><td>현장조사 소모품 구매</td><td>2026-06-05</td><td><span class="bx bg">승인완료</span></td></tr>
           <tr><td>APP-2026-010</td><td>5월 출장비 정산</td><td>2026-05-30</td><td><span class="bx br">반려</span></td></tr>
@@ -519,7 +525,7 @@ td.neg{text-align:right!important;font-weight:600;color:var(--text-danger)}
       <div class="sbar"><input type="search" placeholder="문서명 검색"><select><option>전체</option><option>진행중</option><option>승인완료</option><option>반려</option></select></div>
       <div class="card" style="padding:0"><div class="tw"><table>
         <thead><tr><th>문서번호</th><th>문서명</th><th>기안자</th><th>기안일</th><th>상태</th></tr></thead>
-        <tbody>
+        <tbody id="appr-all-tbody">
           <tr><td>APP-2026-018</td><td>6월 출장비 정산 신청</td><td>홍길동</td><td>2026-06-17</td><td><span class="bx ba">검토중</span></td></tr>
           <tr><td>APP-2026-016</td><td>차량 정기점검 비용 청구</td><td>박수질</td><td>2026-06-13</td><td><span class="bx bg">승인완료</span></td></tr>
           <tr><td>APP-2026-015</td><td>5월 출장비 정산 신청</td><td>최대기</td><td>2026-06-10</td><td><span class="bx br">반려</span></td></tr>
@@ -1623,8 +1629,8 @@ td.neg{text-align:right!important;font-weight:600;color:var(--text-danger)}
 <!-- ═══════════════ 모달들 ═══════════════ -->
 <div class="mo-overlay" id="mo-notice"><div class="mbox"><div class="mhd"><h3>공지사항 작성</h3><button class="btn" onclick="closeMo('mo-notice')" style="padding:2px 5px"><i class="ti ti-x" aria-hidden="true"></i></button></div><div class="mbody"><div class="fg2"><div class="fg ff"><label>제목</label><input type="text"></div><div class="fg"><label>구분</label><select><option>전체</option><option>중요</option><option>교육</option></select></div><div class="fg"><label>공개 대상</label><select><option>전 직원</option><option>팀장 이상</option></select></div><div class="fg ff"><label>내용</label><textarea style="min-height:90px"></textarea></div></div></div><div class="mft"><button class="btn" onclick="closeMo('mo-notice')">취소</button><button class="btn pri">등록</button></div></div></div>
 <div class="mo-overlay" id="mo-notice-v"><div class="mbox" style="width:560px"><div class="mhd"><h3><i class="ti ti-speakerphone" style="color:var(--accent);margin-right:5px" aria-hidden="true"></i><span id="nv-title">공지사항</span></h3><button class="btn" onclick="closeMo('mo-notice-v')" style="padding:2px 5px"><i class="ti ti-x" aria-hidden="true"></i></button></div><div class="mbody"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span class="bx" id="nv-cat" style="font-size:10px">전체</span></div><div style="font-size:10px;color:var(--text-secondary);margin-bottom:11px" id="nv-meta">-</div><div style="background:var(--bg-secondary);border-radius:var(--radius-md);padding:12px 14px;font-size:11px;line-height:1.9;color:var(--text-primary);white-space:pre-wrap" id="nv-body"></div></div><div class="mft"><button class="btn" onclick="closeMo('mo-notice-v')">닫기</button></div></div></div>
-<div class="mo-overlay" id="mo-appr-new"><div class="mbox"><div class="mhd"><h3>문서 기안</h3><button class="btn" onclick="closeMo('mo-appr-new')" style="padding:2px 5px"><i class="ti ti-x" aria-hidden="true"></i></button></div><div class="mbody"><div class="fg2"><div class="fg ff"><label>문서 종류</label><select><option>출장비 정산</option><option>물품 구매 품의</option><option>업무 협조 요청</option><option>기타</option></select></div><div class="fg ff"><label>제목</label><input type="text"></div><div class="fg"><label>기안일</label><input type="date"></div><div class="fg"><label>결재선</label><select><option>팀장 → 대표이사</option><option>팀장만</option></select></div><div class="fg ff"><label>내용</label><textarea style="min-height:80px"></textarea></div></div></div><div class="mft"><button class="btn" onclick="closeMo('mo-appr-new')">취소</button><button class="btn pri">기안 제출</button></div></div></div>
-<div class="mo-overlay" id="mo-appr-v"><div class="mbox"><div class="mhd"><h3>결재 문서 상세</h3><button class="btn" onclick="closeMo('mo-appr-v')" style="padding:2px 5px"><i class="ti ti-x" aria-hidden="true"></i></button></div><div class="mbody"><div style="background:var(--bg-secondary);border-radius:var(--radius-md);padding:10px;margin-bottom:10px;font-size:11px;display:grid;grid-template-columns:1fr 1fr;gap:6px"><div><span style="color:var(--text-secondary)">문서번호</span><div style="font-weight:600;color:var(--text-primary)">APP-2026-018</div></div><div><span style="color:var(--text-secondary)">기안자</span><div>홍길동</div></div><div><span style="color:var(--text-secondary)">문서명</span><div>6월 출장비 정산 신청</div></div><div><span style="color:var(--text-secondary)">기안일</span><div>2026-06-17</div></div></div><div style="margin-bottom:10px"><div style="font-size:10px;color:var(--text-secondary);margin-bottom:5px">결재 흐름</div><div class="appr-flow"><div class="appr-step"><div class="appr-circle done"><i class="ti ti-check" style="font-size:10px" aria-hidden="true"></i></div><div class="appr-lbl">기안<br>홍길동</div></div><div style="color:var(--text-tertiary);font-size:11px">→</div><div class="appr-step"><div class="appr-circle cur">검토</div><div class="appr-lbl">팀장<br>김환경</div></div><div style="color:var(--text-tertiary);font-size:11px">→</div><div class="appr-step"><div class="appr-circle pend">대기</div><div class="appr-lbl">대표<br>이사</div></div></div></div><div class="fg"><label>결재 의견</label><textarea id="appr-opinion" placeholder="의견 입력 (반려 시 필수)"></textarea></div></div><div class="mft"><button class="btn dng" onclick="processApprDecision('반려')">반려</button><button class="btn pri" onclick="processApprDecision('승인')">승인</button></div></div></div>
+<div class="mo-overlay" id="mo-appr-new"><div class="mbox"><div class="mhd"><h3>문서 기안</h3><button class="btn" onclick="closeMo('mo-appr-new')" style="padding:2px 5px"><i class="ti ti-x" aria-hidden="true"></i></button></div><div class="mbody"><div class="fg2"><div class="fg ff"><label>문서 종류</label><select id="appr-new-type"><option>출장비 정산</option><option>물품 구매 품의</option><option>업무 협조 요청</option><option>기타</option></select></div><div class="fg ff"><label>제목</label><input id="appr-new-title" type="text"></div><div class="fg"><label>기안일</label><input id="appr-new-date" type="date"></div><div class="fg"><label>1차 결재자</label><select id="appr-new-ap1"></select></div><div class="fg"><label>2차 결재자 (선택)</label><select id="appr-new-ap2"><option value="">없음</option></select></div><div class="fg ff"><label>내용</label><textarea id="appr-new-content" style="min-height:80px"></textarea></div></div><div id="appr-new-err" style="display:none;color:var(--text-danger);font-size:11px;margin-top:6px"></div></div><div class="mft"><button class="btn" onclick="closeMo('mo-appr-new')">취소</button><button class="btn pri" onclick="submitApproval()">기안 제출</button></div></div></div>
+<div class="mo-overlay" id="mo-appr-v"><div class="mbox"><div class="mhd"><h3>결재 문서 상세</h3><button class="btn" onclick="closeMo('mo-appr-v')" style="padding:2px 5px"><i class="ti ti-x" aria-hidden="true"></i></button></div><div class="mbody"><div style="background:var(--bg-secondary);border-radius:var(--radius-md);padding:10px;margin-bottom:10px;font-size:11px;display:grid;grid-template-columns:1fr 1fr;gap:6px"><div><span style="color:var(--text-secondary)">문서번호</span><div id="appr-v-docno" style="font-weight:600;color:var(--text-primary)">-</div></div><div><span style="color:var(--text-secondary)">기안자</span><div id="appr-v-drafter">-</div></div><div><span style="color:var(--text-secondary)">문서명</span><div id="appr-v-title">-</div></div><div><span style="color:var(--text-secondary)">기안일</span><div id="appr-v-date">-</div></div></div><div style="margin-bottom:10px"><div style="font-size:10px;color:var(--text-secondary);margin-bottom:5px">결재 흐름</div><div class="appr-flow" id="appr-v-flow"></div></div><div class="fg" id="appr-v-opinion-fg"><label>결재 의견</label><textarea id="appr-opinion" placeholder="의견 입력 (반려 시 필수)"></textarea></div></div><div class="mft" id="appr-v-actions"><button class="btn dng" onclick="processApprDecision('반려')">반려</button><button class="btn pri" onclick="processApprDecision('승인')">승인</button></div></div></div>
 <div class="mo-overlay" id="mo-cal"><div class="mbox"><div class="mhd"><h3>일정 등록</h3><button class="btn" onclick="closeMo('mo-cal')" style="padding:2px 5px"><i class="ti ti-x" aria-hidden="true"></i></button></div><div class="mbody"><div class="fg2"><div class="fg ff"><label>일정 제목</label><input type="text"></div><div class="fg"><label>시작일</label><input type="date"></div><div class="fg"><label>종료일</label><input type="date"></div><div class="fg"><label>시작시간</label><input type="time"></div><div class="fg"><label>종료시간</label><input type="time"></div><div class="fg"><label>구분</label><select><option>업무</option><option>회의</option><option>출장</option><option>현장조사</option></select></div><div class="fg"><label>장소</label><input type="text"></div><div class="fg ff"><label>참석자</label><input type="text" placeholder="쉼표로 구분"></div><div class="fg ff"><label>메모</label><textarea></textarea></div></div></div><div class="mft"><button class="btn" onclick="closeMo('mo-cal')">취소</button><button class="btn pri">저장</button></div></div></div>
 <div class="mo-overlay" id="mo-worklog"><div class="mbox"><div class="mhd"><h3>업무일지 작성</h3><button class="btn" onclick="closeMo('mo-worklog')" style="padding:2px 5px"><i class="ti ti-x" aria-hidden="true"></i></button></div><div class="mbody"><div class="fg2"><div class="fg"><label>날짜</label><input type="date"></div><div class="fg"><label>팀</label><select><option>측정조사팀</option><option>실험실</option><option>경영지원팀</option><option>대표</option></select></div><div class="fg"><label>현장/위치</label><input type="text"></div><div class="fg"><label>상태</label><select><option>완료</option><option>진행중</option><option>예정</option></select></div><div class="fg ff"><label>업무 내용</label><textarea style="min-height:80px"></textarea></div><div class="fg ff"><label>특이사항/내일 계획</label><textarea></textarea></div></div></div><div class="mft"><button class="btn" onclick="closeMo('mo-worklog')">취소</button><button class="btn pri">저장</button></div></div></div>
 <div class="mo-overlay" id="mo-vehicle"><div class="mbox"><div class="mhd"><h3>운행 기록 등록</h3><button class="btn" onclick="closeMo('mo-vehicle')" style="padding:2px 5px"><i class="ti ti-x" aria-hidden="true"></i></button></div><div class="mbody"><div class="fg2"><div class="fg"><label>운행일자</label><input type="date"></div><div class="fg"><label>차량 선택</label><select><option>12가 3456 (그랜저)</option><option>34나 7890 (스타렉스)</option><option>56다 1234 (포터)</option></select></div><div class="fg"><label>운전자</label><input type="text"></div><div class="fg"><label>동승자</label><input type="text"></div><div class="fg"><label>출발지</label><input type="text" placeholder="본사"></div><div class="fg"><label>목적지</label><input type="text"></div><div class="fg"><label>출발 계기판(km)</label><input type="number"></div><div class="fg"><label>도착 계기판(km)</label><input type="number"></div><div class="fg"><label>주유비(원)</label><input type="number" placeholder="0"></div><div class="fg"><label>운행 목적</label><select><option>현장조사</option><option>시료채취</option><option>장비운반</option><option>출장</option><option>기타</option></select></div><div class="fg ff"><label>비고</label><textarea></textarea></div></div></div><div class="mft"><button class="btn" onclick="closeMo('mo-vehicle')">취소</button><button class="btn pri">저장</button></div></div></div>
@@ -1694,6 +1700,8 @@ td.neg{text-align:right!important;font-weight:600;color:var(--text-danger)}
 
 
 
+<!-- 데이터 접근 어댑터 (서버 연동 / localStorage 폴백) — uni_build_20260714.md §6.1 -->
+<script src="js/uni-store.js"></script>
 <script>
 const TITLES={dash:'대시보드','member-info':'회원정보 관리',notice:'공지사항/게시판',approval:'전자결재',calendar:'일정/캘린더',worklog:'업무일지',emp:'인사관리',leavegen:'연차생성',leave:'휴가관리',contract:'계약·미수금관리',env:'환경질현황','client-reg':'거래처등록',account:'계정과목','acc-ledger':'계정별원장',ledger:'거래처원장',equip:'장비관리'};
 // ── 부서명 정규화 (구 데이터·표기 차이 통합) ──
@@ -3168,14 +3176,168 @@ function confirmDecisionReason(){
 }
 
 // 전자결재 승인/반려 처리 (결재 의견 textarea 연동)
-function processApprDecision(decision){
+async function processApprDecision(decision){
   const opinion = document.getElementById('appr-opinion')?.value.trim()||'';
   if(decision==='반려' && !opinion){
     alert('반려 시 결재 의견(사유)을 입력해주세요.');
     return;
   }
+  const id = document.getElementById('mo-appr-v')?.dataset.apprId;
+  // 서버 워크플로우 연동 (온라인 + 서버 문서일 때)
+  if(window.UniApproval && UniAuth.isOnline() && id){
+    try{
+      if(decision==='승인') await UniApproval.approve(id, opinion);
+      else await UniApproval.reject(id, opinion);
+    }catch(e){ alert(e.message||'결재 처리에 실패했습니다.'); return; }
+    showToast(decision + '되었습니다.', decision==='승인'?'success':'danger');
+    closeMo('mo-appr-v');
+    if(typeof renderApprovals==='function') renderApprovals();
+    if(typeof refreshNotif==='function') refreshNotif();
+    return;
+  }
+  // 오프라인/목업 폴백
   showToast(decision + '되었습니다.' + (opinion?' (의견 등록됨)':''), decision==='승인'?'success':'danger');
   closeMo('mo-appr-v');
+}
+
+// ══════════════════════════════════════════════
+// 인앱 알림 (UniNotify)
+// ══════════════════════════════════════════════
+async function refreshNotif(){
+  if(!(window.UniNotify && UniAuth.isOnline())) return;
+  try{
+    const r = await UniNotify.list();
+    const badge=document.getElementById('notif-badge');
+    if(badge){ if(r.unread>0){ badge.style.display=''; badge.textContent=r.unread>99?'99+':r.unread; } else badge.style.display='none'; }
+    const list=document.getElementById('notif-list');
+    if(list){
+      list.innerHTML = r.items.map(n=>{
+        const b=(n.body||'').replace(/</g,'&lt;');
+        const t=(n.title||'').replace(/</g,'&lt;');
+        return `<div onclick="onNotifClick(${n.id},'${(n.ref||'').replace(/'/g,'')}')" style="padding:8px 10px;border-bottom:0.5px solid var(--border-t);cursor:pointer;background:${n.is_read?'':'var(--bg-info)'}"><div style="font-size:11px;font-weight:600;color:var(--text-primary)">${t}</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px">${b}</div><div style="font-size:9px;color:var(--text-tertiary);margin-top:2px">${(n.created_at||'').replace('T',' ').slice(0,16)}</div></div>`;
+      }).join('') || '<div style="padding:16px;text-align:center;color:var(--text-tertiary);font-size:11px">알림이 없습니다</div>';
+    }
+  }catch(e){ /* 무시 */ }
+}
+function toggleNotif(ev){
+  if(ev) ev.stopPropagation();
+  const dd=document.getElementById('notif-dropdown');
+  if(!dd) return;
+  const show = dd.style.display==='none';
+  dd.style.display = show?'block':'none';
+  if(show) refreshNotif();
+}
+async function onNotifClick(id, ref){
+  try{ await UniNotify.read(id); }catch(e){}
+  refreshNotif();
+  if(ref){
+    const dd=document.getElementById('notif-dropdown'); if(dd) dd.style.display='none';
+    if(typeof openApprDetail==='function') openApprDetail(ref);
+  }
+}
+async function markAllNotif(){
+  try{ await UniNotify.readAll(); }catch(e){}
+  refreshNotif();
+}
+// 드롭다운 바깥 클릭 시 닫기
+document.addEventListener('click', function(e){
+  const dd=document.getElementById('notif-dropdown');
+  const bell=document.getElementById('notif-bell');
+  if(dd && dd.style.display!=='none' && !dd.contains(e.target) && bell && !bell.contains(e.target)){
+    dd.style.display='none';
+  }
+});
+
+// ══════════════════════════════════════════════
+// 전자결재 서버 연동 (UniApproval)
+// ══════════════════════════════════════════════
+function apprStatusBadge(st){
+  if(st==='approved') return '<span class="bx bg">승인완료</span>';
+  if(st==='rejected') return '<span class="bx br">반려</span>';
+  return '<span class="bx ba">진행중</span>';
+}
+function apprName(email){
+  const db = JSON.parse(localStorage.getItem('uni_members')||'[]');
+  const m = db.find(x=>x.email===email);
+  return m ? m.name : (email||'').split('@')[0];
+}
+async function renderApprovals(){
+  if(!(window.UniApproval && UniAuth.isOnline())) return; // 오프라인이면 목업 유지
+  try{
+    const [inbox, mine, all] = await Promise.all([
+      UniApproval.list('inbox'), UniApproval.list('outbox'), UniApproval.list('all')
+    ]);
+    const wt = document.getElementById('appr-wait-tbody');
+    if(wt) wt.innerHTML = inbox.items.map(a=>`<tr><td>${a.doc_no}</td><td>${a.title}</td><td>${apprName(a.drafter)}</td><td>${(a.created_at||'').slice(0,10)}</td><td>${apprStatusBadge(a.status)}</td><td><button class="btn sm" onclick="openApprDetail('${a.id}')">결재</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--text-tertiary)">결재할 문서가 없습니다</td></tr>';
+    // 결재 대기 배지 갱신
+    const badge = document.querySelector('#p-approval .tab.on .bx, #p-approval .tab:first-child .bx');
+    if(badge) badge.textContent = inbox.items.length;
+    const mt = document.getElementById('appr-mine-tbody');
+    if(mt) mt.innerHTML = mine.items.map(a=>`<tr><td>${a.doc_no}</td><td>${a.title}</td><td>${(a.created_at||'').slice(0,10)}</td><td>${apprStatusBadge(a.status)}</td></tr>`).join('') || '<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-tertiary)">기안한 문서가 없습니다</td></tr>';
+    const at = document.getElementById('appr-all-tbody');
+    if(at) at.innerHTML = all.items.map(a=>`<tr><td>${a.doc_no}</td><td>${a.title}</td><td>${apprName(a.drafter)}</td><td>${(a.created_at||'').slice(0,10)}</td><td>${apprStatusBadge(a.status)}</td></tr>`).join('') || '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--text-tertiary)">문서가 없습니다</td></tr>';
+  }catch(e){ /* 무시 */ }
+}
+function openNewAppr(){
+  if(!(window.UniApproval && UniAuth.isOnline())){ alert('전자결재는 서버 연결이 필요합니다.'); return; }
+  const db = JSON.parse(localStorage.getItem('uni_members')||'[]');
+  const cand = db.filter(m=>m.status==='approved' && m.email!==currentUser?.email);
+  const opts = cand.map(m=>`<option value="${m.email}">${m.name} (${m.dept} ${m.rank})</option>`).join('');
+  const s1=document.getElementById('appr-new-ap1'); if(s1) s1.innerHTML=opts;
+  const s2=document.getElementById('appr-new-ap2'); if(s2) s2.innerHTML='<option value="">없음</option>'+opts;
+  document.getElementById('appr-new-title').value='';
+  document.getElementById('appr-new-content').value='';
+  const d=document.getElementById('appr-new-date'); if(d) d.value=new Date().toISOString().slice(0,10);
+  const err=document.getElementById('appr-new-err'); if(err) err.style.display='none';
+  openMo('mo-appr-new');
+}
+async function submitApproval(){
+  const err=document.getElementById('appr-new-err');
+  const setErr=(m)=>{ if(err){ err.style.display='block'; err.textContent=m; } };
+  const title=document.getElementById('appr-new-title').value.trim();
+  const type=document.getElementById('appr-new-type').value;
+  const content=document.getElementById('appr-new-content').value.trim();
+  const ap1=document.getElementById('appr-new-ap1').value;
+  const ap2=document.getElementById('appr-new-ap2').value;
+  const approvers=[ap1, ap2].filter(Boolean);
+  if(!title){ setErr('제목을 입력해주세요.'); return; }
+  if(!approvers.length){ setErr('1차 결재자를 선택해주세요.'); return; }
+  try{
+    await UniApproval.create({title, type, content, approvers});
+  }catch(e){ setErr(e.message||'기안에 실패했습니다.'); return; }
+  closeMo('mo-appr-new');
+  showToast('기안이 상신되었습니다.','success');
+  renderApprovals();
+}
+async function openApprDetail(id){
+  if(!window.UniApproval) return;
+  let a;
+  try{ const r=await UniApproval.get(id); a=r.approval; }catch(e){ alert(e.message||'조회에 실패했습니다.'); return; }
+  document.getElementById('appr-v-docno').textContent=a.doc_no||'-';
+  document.getElementById('appr-v-drafter').textContent=apprName(a.drafter);
+  document.getElementById('appr-v-title').textContent=a.title||'-';
+  document.getElementById('appr-v-date').textContent=(a.created_at||'').slice(0,10);
+  const flow=document.getElementById('appr-v-flow');
+  if(flow){
+    const steps=[`<div class="appr-step"><div class="appr-circle done"><i class="ti ti-check" style="font-size:10px" aria-hidden="true"></i></div><div class="appr-lbl">기안<br>${apprName(a.drafter)}</div></div>`];
+    (a.lines||[]).forEach(l=>{
+      const cls=l.status==='approved'?'done':l.status==='current'?'cur':'pend';
+      const lbl=l.status==='approved'?'승인':l.status==='rejected'?'반려':l.status==='current'?'검토':'대기';
+      const inner=l.status==='approved'?'<i class="ti ti-check" style="font-size:10px" aria-hidden="true"></i>':lbl;
+      steps.push(`<div style="color:var(--text-tertiary);font-size:11px">→</div><div class="appr-step"><div class="appr-circle ${cls}">${inner}</div><div class="appr-lbl">${l.step}차<br>${apprName(l.approver)}</div></div>`);
+    });
+    flow.innerHTML=steps.join('');
+  }
+  const modal=document.getElementById('mo-appr-v');
+  modal.dataset.apprId=id;
+  const curLine=(a.lines||[]).find(l=>l.step===a.cur_step);
+  const canDecide = a.status==='pending' && curLine && (curLine.approver===currentUser?.email || currentUser?.isAdmin);
+  const actions=document.getElementById('appr-v-actions');
+  const opinionFg=document.getElementById('appr-v-opinion-fg');
+  if(actions) actions.style.display = canDecide?'':'none';
+  if(opinionFg) opinionFg.style.display = canDecide?'':'none';
+  const op=document.getElementById('appr-opinion'); if(op) op.value='';
+  openMo('mo-appr-v');
 }
 
 // ══════════════════════════════════════════════
@@ -4809,17 +4971,23 @@ function renderMemberList(search='', statusFilter=''){
 
 // ── 승인 처리 ──
 function approveMember(email){
-  askDecisionReason('가입 승인', '승인 메모를 남길 수 있습니다. (선택)', '승인', 'pri', function(reason){
-    let db = JSON.parse(localStorage.getItem('uni_members')||'[]');
-    const idx = db.findIndex(m=>m.email===email);
-    if(idx<0) return;
-    const empno = 'EMP-' + String(db.filter(m=>m.empno).length+1).padStart(3,'0');
-    db[idx].status = 'approved';
-    db[idx].empno  = empno;
-    db[idx].approveReason = reason||'';
-    localStorage.setItem('uni_members', JSON.stringify(db));
+  askDecisionReason('가입 승인', '승인 메모를 남길 수 있습니다. (선택)', '승인', 'pri', async function(reason){
+    if(window.UniAuth && UniAuth.isOnline()){
+      try{ await UniAuth.approveMember(email); await UniAuth.syncMembers(); }
+      catch(e){ alert(e.message||'승인에 실패했습니다.'); return; }
+      memberDB = JSON.parse(localStorage.getItem('uni_members')||'[]');
+    } else {
+      let db = JSON.parse(localStorage.getItem('uni_members')||'[]');
+      const idx = db.findIndex(m=>m.email===email);
+      if(idx<0) return;
+      const empno = 'EMP-' + String(db.filter(m=>m.empno).length+1).padStart(3,'0');
+      db[idx].status = 'approved';
+      db[idx].empno  = empno;
+      db[idx].approveReason = reason||'';
+      localStorage.setItem('uni_members', JSON.stringify(db));
+    }
     // 사원 테이블에 반영
-    addEmpRow(db[idx]);
+    addEmpRow();
     updatePendingBadge();
     renderPendingList();
     renderMemberList();
@@ -4828,11 +4996,17 @@ function approveMember(email){
 
 // ── 거절 처리 ──
 function rejectMember(email){
-  askDecisionReason('가입 거절', '거절 사유를 입력해주세요.', '거절', 'dng', function(reason){
+  askDecisionReason('가입 거절', '거절 사유를 입력해주세요.', '거절', 'dng', async function(reason){
     if(!reason){ alert('거절 사유를 입력해주세요.'); return; }
-    let db = JSON.parse(localStorage.getItem('uni_members')||'[]');
-    const idx = db.findIndex(m=>m.email===email);
-    if(idx>=0){ db[idx].status='rejected'; db[idx].rejectReason=reason; localStorage.setItem('uni_members',JSON.stringify(db)); }
+    if(window.UniAuth && UniAuth.isOnline()){
+      try{ await UniAuth.rejectMember(email); await UniAuth.syncMembers(); }
+      catch(e){ alert(e.message||'거절에 실패했습니다.'); return; }
+      memberDB = JSON.parse(localStorage.getItem('uni_members')||'[]');
+    } else {
+      let db = JSON.parse(localStorage.getItem('uni_members')||'[]');
+      const idx = db.findIndex(m=>m.email===email);
+      if(idx>=0){ db[idx].status='rejected'; db[idx].rejectReason=reason; localStorage.setItem('uni_members',JSON.stringify(db)); }
+    }
     updatePendingBadge();
     renderPendingList();
     renderMemberList();
@@ -4991,17 +5165,30 @@ function fillDemo(id, pw){
 }
 
 // ── 로그인 ──
-function doLogin(){
-  memberDB = JSON.parse(localStorage.getItem('uni_members')||'[]');
+async function doLogin(){
   const idRaw = document.getElementById('li-id').value.trim();
   const id = idRaw.includes('@') ? idRaw : idRaw + '@unienv4u.com';
   const pw = document.getElementById('li-pw').value;
   const errEl = document.getElementById('li-err');
   if(!id||!pw){errEl.style.display='block';errEl.textContent='아이디와 비밀번호를 입력해주세요.';return;}
-  const user = memberDB.find(m=>m.email===id && m.pw===pw);
-  if(!user){errEl.style.display='block';errEl.textContent='아이디 또는 비밀번호가 올바르지 않습니다.';return;}
-  if(user.status==='pending'){errEl.style.display='block';errEl.textContent='가입 승인 대기 중입니다. 마스터 관리자의 승인을 기다려주세요.';return;}
-  if(user.status==='rejected'){errEl.style.display='block';errEl.textContent='가입이 거절되었습니다. 관리자에게 문의해주세요.';return;}
+  // 서버 인증(온라인) 또는 localStorage 폴백(오프라인) — js/uni-store.js
+  const res = await UniAuth.login(id, pw);
+  if(!res.ok){errEl.style.display='block';errEl.textContent=res.message||'로그인에 실패했습니다.';return;}
+  const user = res.user;
+  // 서버 회원 목록을 로컬에 미러링(기존 화면 호환) 후 memberDB 갱신
+  await UniAuth.syncMembers();
+  memberDB = JSON.parse(localStorage.getItem('uni_members')||'[]');
+  if(typeof renderEmpTable==='function') renderEmpTable();
+  // Phase 2·3: 업무·인사/근태 도메인 서버 하이드레이트 후 화면 갱신
+  if(window.UniSync){
+    await UniSync.hydrate();
+    UniSync.refresh();
+    // 서버에서 내려온 메뉴권한을 사이드바에 재적용
+    if(typeof renderSidebarPerms==='function') renderSidebarPerms(user);
+    // 전자결재 목록 + 알림 서버 로드
+    if(typeof renderApprovals==='function') renderApprovals();
+    if(typeof refreshNotif==='function') refreshNotif();
+  }
   // 로그인 성공
   document.getElementById('login-screen').style.display='none';
   // currentUser 설정
@@ -5037,6 +5224,7 @@ function doLogin(){
 
 // ── 로그아웃 ──
 function doLogout(){
+  if(window.UniAuth) UniAuth.logout();
   currentUser=null;
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('li-id').value='';
@@ -5051,7 +5239,7 @@ function doLogout(){
 }
 
 // ── 회원가입 ──
-function doSignup(){
+async function doSignup(){
   memberDB = JSON.parse(localStorage.getItem('uni_members')||'[]');
   const name  = document.getElementById('su-name').value.trim();
   const dept  = document.getElementById('su-dept').value;
@@ -5077,16 +5265,11 @@ function doSignup(){
   if(pw!==pw2){errEl.style.display='block';errEl.textContent='비밀번호가 일치하지 않습니다.';return;}
   if(memberDB.find(m=>m.email===email)){errEl.style.display='block';errEl.textContent='이미 등록된 이메일입니다.';return;}
 
-  const reqNo = 'REQ-' + Date.now();
-  const newMember = {email,pw,name,ename,pemail,jumin,dept,rank,type,tel,
-    date: date||new Date().toISOString().slice(0,10),
-    leaveDate:'',
-    empno:'',isAdmin:false,
-    status:'pending',
-    reqNo, reqDate: new Date().toISOString().slice(0,10)
-  };
-  memberDB.push(newMember);
-  localStorage.setItem('uni_members', JSON.stringify(memberDB));
+  // 서버로 가입 신청(온라인) 또는 localStorage 폴백(오프라인) — js/uni-store.js
+  const payload = {email,pw,name,ename,pemail,jumin,dept,rank,type,tel,
+    date: date||new Date().toISOString().slice(0,10)};
+  const res = await UniAuth.signup(payload);
+  if(!res.ok){errEl.style.display='block';errEl.textContent=res.message||'가입 신청에 실패했습니다.';return;}
 
   errEl.style.display='none';
   const form = document.getElementById('form-signup');

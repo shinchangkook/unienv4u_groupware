@@ -1,0 +1,22 @@
+# 운영 배포용 compose. 비밀값은 .env(루트) 또는 배포 환경변수로 주입.
+services:
+  groupware:
+    build: .
+    image: unienv4u-groupware:latest
+    container_name: unienv4u-groupware
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: "4000"
+      # 운영 시 반드시 아래 두 값을 강한 무작위 값으로 설정 (.env 또는 오케스트레이터 시크릿)
+      JWT_SECRET: "${JWT_SECRET:?set JWT_SECRET}"
+      JUMIN_KEY: "${JUMIN_KEY:?set JUMIN_KEY}"
+      JWT_EXPIRES: "12h"
+      SERVE_FRONTEND: "true"
+      CORS_ORIGIN: "${CORS_ORIGIN:-}"
+    volumes:
+      - groupware-data:/app/server/data
+
+volumes:
+  groupware-data:
