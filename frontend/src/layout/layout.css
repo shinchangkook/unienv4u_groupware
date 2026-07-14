@@ -1,0 +1,38 @@
+.shell { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: var(--sidebar-w); flex-shrink: 0;
+  background: var(--bg-primary); border-right: 0.5px solid var(--border-s);
+  display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh;
+}
+.brand { display: flex; align-items: center; gap: 10px; padding: 16px 16px 14px; border-bottom: 0.5px solid var(--border-s); }
+.brand-logo { width: 34px; height: 34px; border-radius: 9px; background: var(--accent); color: #fff; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+.brand-name { font-size: 13px; font-weight: 800; }
+.brand-sub { font-size: 10px; color: var(--text-tertiary); }
+
+.nav { flex: 1; overflow-y: auto; padding: 10px 8px; }
+.nav-group { margin-bottom: 12px; }
+.nav-group-t { font-size: 10px; font-weight: 700; color: var(--text-tertiary); padding: 4px 10px; letter-spacing: .04em; }
+.ni {
+  display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: var(--radius-md);
+  color: var(--text-secondary); font-size: 12.5px; font-weight: 500; cursor: pointer; transition: background .1s;
+}
+.ni i { font-size: 17px; width: 18px; text-align: center; }
+.ni:hover { background: var(--bg-secondary); }
+.ni.on { background: var(--bg-info); color: var(--accent); font-weight: 700; }
+
+.sb-usr { display: flex; align-items: center; gap: 8px; padding: 12px; border-top: 0.5px solid var(--border-s); }
+.ava { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-info); color: var(--accent); font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.usr-meta { flex: 1; min-width: 0; }
+.usr-name { font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.usr-dept { font-size: 10px; color: var(--text-tertiary); }
+
+.content { flex: 1; min-width: 0; padding: 22px 26px; }
+
+@media (max-width: 768px) {
+  .shell { flex-direction: column; }
+  .sidebar { width: 100%; height: auto; position: relative; flex-direction: column; }
+  .nav { display: flex; flex-wrap: wrap; }
+  .nav-group { margin-bottom: 6px; }
+  .content { padding: 16px; }
+}
